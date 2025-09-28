@@ -1,23 +1,23 @@
-# tsdown-starter
+# dom-once
 
-A starter for creating a TypeScript package.
+Simple utilities to manipulate DOM elements only once.
 
 ## Development
 
 - Install dependencies:
 
 ```bash
-npm install
+pnpm install
 ```
 
 - Run the unit tests:
 
 ```bash
-npm run test
+pnpm run test
 ```
 
 - Build the library:
 
 ```bash
-npm run build
+pnpm run build
 ```
