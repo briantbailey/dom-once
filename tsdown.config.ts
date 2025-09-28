@@ -6,4 +6,13 @@ export default defineConfig([
     platform: 'neutral',
     dts: true,
   },
+  {
+    entry: ['./src/dom-once.ts'],
+    format: 'iife',
+    platform: 'browser',
+    globalName: 'DomOnce',
+    minify: true,
+    dts: false,
+    outExtensions: () => ({ js: '.min.js' }),
+  },
 ]);
