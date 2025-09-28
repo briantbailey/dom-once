@@ -1,26 +1,26 @@
 {
   "name": "dom-once",
   "version": "0.0.0",
-  "description": "Simple utilities to select DOM elements only once.",
+  "description": "Simple utilities to manipulate DOM elements only once.",
   "type": "module",
   "license": "MIT",
-  "homepage": "https://github.com/author/library#readme",
+  "homepage": "https://github.com/briantbailey/dom-once#readme",
   "bugs": {
-    "url": "https://github.com/author/library/issues"
+    "url": "https://github.com/briantbailey/dom-once/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/author/library.git"
+    "url": "https://github.com/briantbailey/dom-once.git"
   },
-  "author": "Author Name <author.name@mail.com>",
+  "author": "Brian T. Bailey",
   "files": [
     "dist"
   ],
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/dom-once.js",
+  "module": "./dist/don-once.js",
+  "types": "./dist/dom-once.d.ts",
   "exports": {
-    ".": "./dist/index.js",
+    ".": "./dist/dom-once.js",
     "./package.json": "./package.json"
   },
   "publishConfig": {
