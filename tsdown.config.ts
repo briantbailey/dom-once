@@ -10,7 +10,7 @@ export default defineConfig([
     entry: ['./src/dom-once.ts'],
     format: 'iife',
     platform: 'browser',
-    globalName: 'DomOnce',
+    globalName: 'domOnce',
     minify: true,
     dts: false,
     outExtensions: () => ({ js: '.min.js' }),
