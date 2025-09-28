@@ -1,6 +1,6 @@
-import { expect, test } from "vitest";
-import { myFunction } from "../src/dom-once";
+import { expect, test } from 'vitest';
+import { myFunction } from '../src/dom-once';
 
-test("myFunction", () => {
-  expect(myFunction()).toBe("Hello, world!");
+test('myFunction', () => {
+  expect(myFunction()).toBe('Hello, world!');
 });
