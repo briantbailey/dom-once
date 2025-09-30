@@ -1,5 +1,7 @@
 {
   "singleQuote": true,
   "semi": true,
-  "experimentalTernaries": true
+  "experimentalTernaries": true,
+  "tabWidth": 2,
+  "trailingComma": "all"
 }
