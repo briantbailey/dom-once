@@ -35,16 +35,15 @@ const _onceIdRE: RegExp = /^[a-zA-Z0-9_-]+$/;
  *
  * Data attributes must start with "data-" and can contain alphanumeric characters, underscores, and hyphens.
  */
-const _dataAttrRE: RegExp = /^data-[a-z0-9.-:]+$/;
+const _dataAttrRE: RegExp = /^data-[a-z0-9.:-]+$/;
 
 /**
  * Assertion function to validate that a string is a valid data attribute.
  * Throws an error if the string doesn't match the data attribute pattern.
  */
-// @ts-expect-error TS6133
 function _assertDataAttribute(value: string): asserts value is DataAttribute {
   if (!_dataAttrRE.test(value)) {
-    throw new Error(`Invalid data attribute: "${value}". Must match pattern: /^data-[a-z0-9.-:]+$/`);
+    throw new Error(`Invalid data attribute: "${value}". Must match pattern: /^data-[a-z0-9.:-]+$/`);
   }
 }
 
@@ -120,25 +119,34 @@ function _hasOnceAttributeValue(element: Element, onceId: string, onceAttribute:
 export function querySelectorOnce<T extends Element>(
   onceId: OnceId,
   selector: string,
-  context: Document | DocumentFragment | Element = document,
   options: {
-    onceAttribute: DataAttribute;
-  } = {
-    onceAttribute: onceAttrName,
-  },
+    onceAttribute?: DataAttribute;
+    context?: Document | DocumentFragment | Element;
+  } = {},
 ): T[] {
-  const { onceAttribute } = options;
+  const {
+    onceAttribute = onceAttrName,
+    context = document
+  } = options;
 
   // Validate the onceId parameter is a valid once ID.
   _assertOnceId(onceId);
 
-  // Validate the selector parameter is a non-empty string.
-  if (typeof selector !== 'string' || selector === '') {
-    throw new TypeError('selector must be a non-empty string');
+  // Validate the onceAttribute parameter is a valid data attribute.
+  _assertDataAttribute(onceAttribute);
+
+  // Validate the selector parameter is a string.
+  if (typeof selector !== 'string') {
+    throw new TypeError('selector must be a string');
+  }
+
+  // If selector is empty, return empty array (consistent with CSS querySelectorAll behavior)
+  if (selector === '') {
+    return [];
   }
 
   // Validate the context parameter is a valid context.
-  if (!(context instanceof Document || context instanceof DocumentFragment || context instanceof Element)) {
+  if (!context || typeof context.querySelectorAll !== 'function') {
     throw new TypeError('context must be a Document, DocumentFragment, or Element');
   }
 
