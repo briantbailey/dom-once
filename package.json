@@ -27,6 +27,7 @@
     "access": "public"
   },
   "scripts": {
+    "prebuild": "node ./scripts/generate-version.js",
     "build": "tsdown",
     "dev": "tsdown --watch",
     "test": "vitest",

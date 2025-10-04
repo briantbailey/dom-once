@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+export { version } from './version';
+
 // Types
 /**
  * Data attribute must start with "data-" and can contain alphanumeric characters, underscores, and hyphens.
@@ -15,7 +17,6 @@ export type OnceId = string;
  * Name of the HTML attribute containing an element's once ids.
  */
 const onceAttrName: DataAttribute = 'data-dom-once';
-
 
 // Private API
 /**
@@ -43,7 +44,9 @@ const _dataAttrRE: RegExp = /^data-[a-z0-9.:-]+$/;
  */
 function _assertDataAttribute(value: string): asserts value is DataAttribute {
   if (!_dataAttrRE.test(value)) {
-    throw new Error(`Invalid data attribute: "${value}". Must match pattern: /^data-[a-z0-9.:-]+$/`);
+    throw new Error(
+      `Invalid data attribute: "${value}". Must match pattern: /^data-[a-z0-9.:-]+$/`,
+    );
   }
 }
 
@@ -56,7 +59,9 @@ function _assertOnceId(value: string): asserts value is OnceId {
     throw new Error('Once ID cannot be null, undefined, or empty');
   }
   if (!_onceIdRE.test(value)) {
-    throw new Error(`Invalid once ID: "${value}". Must contain only letters, numbers, underscores, and hyphens`);
+    throw new Error(
+      `Invalid once ID: "${value}". Must contain only letters, numbers, underscores, and hyphens`,
+    );
   }
 }
 
@@ -64,7 +69,11 @@ function _assertOnceId(value: string): asserts value is OnceId {
  * Adds a once ID to an element's data attribute value.
  * If the ID already exists, no changes are made.
  */
-function _addOnceAttributeValue(element: Element, onceId: string, onceAttribute: DataAttribute): void {
+function _addOnceAttributeValue(
+  element: Element,
+  onceId: string,
+  onceAttribute: DataAttribute,
+): void {
   const value = element.getAttribute(onceAttribute);
 
   if (!value) {
@@ -87,7 +96,11 @@ function _addOnceAttributeValue(element: Element, onceId: string, onceAttribute:
  * If the ID does not exist, no changes are made.
  */
 // @ts-expect-error TS6133
-function _removeOnceAttributeValue(element: Element, onceId: string, onceAttribute: DataAttribute): void {
+function _removeOnceAttributeValue(
+  element: Element,
+  onceId: string,
+  onceAttribute: DataAttribute,
+): void {
   const value = element.getAttribute(onceAttribute);
 
   if (!value) return;
@@ -96,21 +109,27 @@ function _removeOnceAttributeValue(element: Element, onceId: string, onceAttribu
   if (!onceIdList.includes(onceId)) return;
 
   // Remove the ID from the existing value with the filter method
-  element.setAttribute(onceAttribute, onceIdList.filter((id) => id !== onceId).join(' '));
-};
+  element.setAttribute(
+    onceAttribute,
+    onceIdList.filter((id) => id !== onceId).join(' '),
+  );
+}
 
 /**
  * Checks if the element has the once attribute value.
  */
-function _hasOnceAttributeValue(element: Element, onceId: string, onceAttribute: DataAttribute): boolean {
+function _hasOnceAttributeValue(
+  element: Element,
+  onceId: string,
+  onceAttribute: DataAttribute,
+): boolean {
   const value = element.getAttribute(onceAttribute);
 
   if (!value) return false;
 
   // Use CSS selector matching for better performance
   return element.matches(`[${onceAttribute}~="${onceId}"]`);
-};
-
+}
 
 // Public API
 /**
@@ -124,10 +143,7 @@ export function querySelectorOnce<T extends Element>(
     context?: Document | DocumentFragment | Element;
   } = {},
 ): T[] {
-  const {
-    onceAttribute = onceAttrName,
-    context = document
-  } = options;
+  const { onceAttribute = onceAttrName, context = document } = options;
 
   // Validate the onceId parameter is a valid once ID.
   _assertOnceId(onceId);
@@ -147,7 +163,9 @@ export function querySelectorOnce<T extends Element>(
 
   // Validate the context parameter is a valid context.
   if (!context || typeof context.querySelectorAll !== 'function') {
-    throw new TypeError('context must be a Document, DocumentFragment, or Element');
+    throw new TypeError(
+      'context must be a Document, DocumentFragment, or Element',
+    );
   }
 
   // Single-pass processing for optimal performance
@@ -183,4 +201,3 @@ export function querySelectorOnce<T extends Element>(
 
 //   return Array.from(elements);
 // }
-
