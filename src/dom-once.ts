@@ -1,8 +1,12 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/**
+ * @file dom-once.ts
+ */
 
-export { version } from './version';
-
-// Types
+// =============================================================================
+// TYPES — 🧩
+// =============================================================================
+// #region TYPES
+// PUBLIC
 /**
  * Data attribute must start with "data-" and can contain alphanumeric characters, underscores, and hyphens.
  */
@@ -13,37 +17,53 @@ export type DataAttribute = `data-${string}`;
  */
 export type OnceId = string;
 
+// PRIVATE
+// #endregion TYPES
+
+// =============================================================================
+// CONSTANTS — 📌
+// =============================================================================
+// #region CONSTANTS
+// PUBLIC
+export { version } from './version';
+
+// PRIVATE
 /**
  * Name of the HTML attribute containing an element's once ids.
  */
-const onceAttrName: DataAttribute = 'data-dom-once';
+const ONCE_ATTRIBUTE_NAME: DataAttribute = 'data-dom-once';
 
-// Private API
+// PRIVATE
 /**
  * Regular expression to match whitespace.
  */
-const _whitespaceRE: RegExp = /\s+/;
+const WHITESPACE_PATTERN: RegExp = /\s+/;
 
 /**
  * Regular expression to match a valid once id.
  *
  * Once ids must be alphanumeric and can contain underscores and hyphens.
  */
-const _onceIdRE: RegExp = /^[a-zA-Z0-9_-]+$/;
+const ONCE_ID_PATTERN: RegExp = /^[a-zA-Z0-9_-]+$/;
 
 /**
  * Regular expression to match a valid data attribute.
  *
  * Data attributes must start with "data-" and can contain alphanumeric characters, underscores, and hyphens.
  */
-const _dataAttrRE: RegExp = /^data-[a-z0-9.:-]+$/;
+const DATA_ATTRIBUTE_PATTERN: RegExp = /^data-[a-z0-9.:-]+$/;
+// #endregion CONSTANTS
 
+// =============================================================================
+// PRIVATE_HELPERS — 🔒
+// =============================================================================
+// #region PRIVATE_HELPERS
 /**
  * Assertion function to validate that a string is a valid data attribute.
  * Throws an error if the string doesn't match the data attribute pattern.
  */
-function _assertDataAttribute(value: string): asserts value is DataAttribute {
-  if (!_dataAttrRE.test(value)) {
+function assertDataAttribute(value: string): asserts value is DataAttribute {
+  if (!DATA_ATTRIBUTE_PATTERN.test(value)) {
     throw new Error(
       `Invalid data attribute: "${value}". Must match pattern: /^data-[a-z0-9.:-]+$/`,
     );
@@ -54,11 +74,11 @@ function _assertDataAttribute(value: string): asserts value is DataAttribute {
  * Assertion function to validate that a string is a valid once ID.
  * Throws an error if the string doesn't match the once ID pattern.
  */
-function _assertOnceId(value: string): asserts value is OnceId {
+function assertOnceId(value: string): asserts value is OnceId {
   if (value == null || value === '') {
     throw new Error('Once ID cannot be null, undefined, or empty');
   }
-  if (!_onceIdRE.test(value)) {
+  if (!ONCE_ID_PATTERN.test(value)) {
     throw new Error(
       `Invalid once ID: "${value}". Must contain only letters, numbers, underscores, and hyphens`,
     );
@@ -69,7 +89,7 @@ function _assertOnceId(value: string): asserts value is OnceId {
  * Adds a once ID to an element's data attribute value.
  * If the ID already exists, no changes are made.
  */
-function _addOnceAttributeValue(
+function addOnceAttributeValue(
   element: Element,
   onceId: string,
   onceAttribute: DataAttribute,
@@ -96,7 +116,8 @@ function _addOnceAttributeValue(
  * If the ID does not exist, no changes are made.
  */
 // @ts-expect-error TS6133
-function _removeOnceAttributeValue(
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function removeOnceAttributeValue(
   element: Element,
   onceId: string,
   onceAttribute: DataAttribute,
@@ -105,7 +126,7 @@ function _removeOnceAttributeValue(
 
   if (!value) return;
 
-  const onceIdList = value.split(_whitespaceRE);
+  const onceIdList = value.split(WHITESPACE_PATTERN);
   if (!onceIdList.includes(onceId)) return;
 
   // Remove the ID from the existing value with the filter method
@@ -118,7 +139,7 @@ function _removeOnceAttributeValue(
 /**
  * Checks if the element has the once attribute value.
  */
-function _hasOnceAttributeValue(
+function hasOnceAttributeValue(
   element: Element,
   onceId: string,
   onceAttribute: DataAttribute,
@@ -130,8 +151,12 @@ function _hasOnceAttributeValue(
   // Use CSS selector matching for better performance
   return element.matches(`[${onceAttribute}~="${onceId}"]`);
 }
+// #endregion PRIVATE_HELPERS
 
-// Public API
+// =============================================================================
+// PUBLIC_API — 🌐
+// =============================================================================
+// #region PUBLIC_API
 /**
  * Queries for elements and adds the once id to the element's once data attribute value.
  */
@@ -143,13 +168,13 @@ export function querySelectorOnce<T extends Element>(
     context?: Document | DocumentFragment | Element;
   } = {},
 ): T[] {
-  const { onceAttribute = onceAttrName, context = document } = options;
+  const { onceAttribute = ONCE_ATTRIBUTE_NAME, context = document } = options;
 
   // Validate the onceId parameter is a valid once ID.
-  _assertOnceId(onceId);
+  assertOnceId(onceId);
 
   // Validate the onceAttribute parameter is a valid data attribute.
-  _assertDataAttribute(onceAttribute);
+  assertDataAttribute(onceAttribute);
 
   // Validate the selector parameter is a string.
   if (typeof selector !== 'string') {
@@ -174,8 +199,8 @@ export function querySelectorOnce<T extends Element>(
 
   for (let i = 0; i < queryResults.length; i++) {
     const element = queryResults[i];
-    if (!_hasOnceAttributeValue(element, onceId, onceAttribute)) {
-      _addOnceAttributeValue(element, onceId, onceAttribute);
+    if (!hasOnceAttributeValue(element, onceId, onceAttribute)) {
+      addOnceAttributeValue(element, onceId, onceAttribute);
       elements.push(element);
     }
   }
@@ -201,3 +226,4 @@ export function querySelectorOnce<T extends Element>(
 
 //   return Array.from(elements);
 // }
+// #endregion PUBLIC_API
