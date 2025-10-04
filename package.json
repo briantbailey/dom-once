@@ -27,13 +27,17 @@
     "access": "public"
   },
   "scripts": {
-    "prebuild": "node ./scripts/generate-version.js",
+    "check": "eslint && tsc --noEmit && vitest run",
+    "prebuild": "node ./scripts/generate-version.js && eslint && tsc --noEmit && vitest run",
     "build": "tsdown",
     "dev": "tsdown --watch",
     "test": "vitest",
+    "test:ci": "vitest run",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "release": "bumpp && npm publish"
+    "release": "bumpp --all --execute \"pnpm run build\"",
+    "publish": "pnpm run publish:npmjs",
+    "publish:npmjs": "pnpm publish"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
