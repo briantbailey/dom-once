@@ -95,45 +95,40 @@ function addOnceAttributeValue(
   onceAttribute: DataAttribute,
 ): void {
   const value = element.getAttribute(onceAttribute);
-
-  if (!value) {
-    // ID doesn't exist, add it
-    element.setAttribute(onceAttribute, onceId);
-    return;
-  }
-
-  if (element.matches(`[${onceAttribute}~="${onceId}"]`)) {
-    // Check if the ID already exists using CSS selector matching and return if it does
-    return;
-  }
-
-  // Add the new ID to the existing value with string concatenation
-  element.setAttribute(onceAttribute, `${value} ${onceId}`);
+  const ids = value
+    ? value
+        .trim()
+        .split(WHITESPACE_PATTERN)
+        .filter((s) => s.length > 0)
+    : [];
+  if (ids.includes(onceId)) return;
+  ids.push(onceId);
+  element.setAttribute(onceAttribute, ids.join(' '));
 }
 
 /**
  * Removes a once ID from an element's data attribute value.
  * If the ID does not exist, no changes are made.
  */
-// @ts-expect-error TS6133
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function removeOnceAttributeValue(
   element: Element,
   onceId: string,
   onceAttribute: DataAttribute,
 ): void {
   const value = element.getAttribute(onceAttribute);
-
   if (!value) return;
 
-  const onceIdList = value.split(WHITESPACE_PATTERN);
-  if (!onceIdList.includes(onceId)) return;
+  const onceIdList = value
+    .trim()
+    .split(WHITESPACE_PATTERN)
+    .filter((s) => s.length > 0);
+  const filtered = onceIdList.filter((id) => id !== onceId);
 
-  // Remove the ID from the existing value with the filter method
-  element.setAttribute(
-    onceAttribute,
-    onceIdList.filter((id) => id !== onceId).join(' '),
-  );
+  if (filtered.length === 0) {
+    element.removeAttribute(onceAttribute);
+  } else {
+    element.setAttribute(onceAttribute, filtered.join(' '));
+  }
 }
 
 /**
@@ -145,11 +140,55 @@ function hasOnceAttributeValue(
   onceAttribute: DataAttribute,
 ): boolean {
   const value = element.getAttribute(onceAttribute);
-
   if (!value) return false;
 
   // Use CSS selector matching for better performance
   return element.matches(`[${onceAttribute}~="${onceId}"]`);
+}
+
+/**
+ * Checks if a value is iterable.
+ */
+function isIterable(value: unknown): value is Iterable<unknown> {
+  if (typeof Symbol === 'undefined' || typeof Symbol.iterator === 'undefined') {
+    return false;
+  }
+
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    typeof (value as { [Symbol.iterator]?: unknown })[Symbol.iterator] ===
+      'function'
+  );
+}
+
+/**
+ * Checks if a value is array-like.
+ */
+function isArrayLike(value: unknown): value is ArrayLike<unknown> {
+  if (value === null || typeof value !== 'object') return false;
+  const maybe = value as { length?: unknown };
+  const len = maybe.length;
+  return (
+    typeof len === 'number' &&
+    Number.isFinite(len) &&
+    len >= 0 &&
+    Math.floor(len) === len
+  );
+}
+
+/**
+ * Checks if a value is iterable and contains only Element instances.
+ */
+function isIterableElements(value: unknown): value is Iterable<Element> {
+  return isIterable(value);
+}
+
+/**
+ * Checks if a value is array-like and contains only Element instances.
+ */
+function isArrayLikeElements(value: unknown): value is ArrayLike<Element> {
+  return isArrayLike(value);
 }
 // #endregion PRIVATE_HELPERS
 
@@ -209,21 +248,114 @@ export function querySelectorOnce<T extends Element>(
 }
 
 /**
- * Removes a once id from an element's once data attribute value.
+ * Removes a once id from elements.
+ *
+ * Accepted selector types:
+ * - string: a CSS selector (queried with `context.querySelectorAll`)
+ * - Element: a single element
+ * - Iterable<Element>: any iterable of Elements (NodeList, generator, etc.)
+ * - ArrayLike<Element>: array-like collections (Array, HTMLCollection, etc.)
+ *
+ * Behavior:
+ * - Only elements that actually had the once id removed are returned.
+ * - When the last once id is removed from an element, the data attribute is removed entirely.
+ * - Throws TypeError for unsupported selector shapes (important for IIFE / runtime consumers).
+ *
+ * Returns: an array of Elements that were modified.
  */
-// export function removeOnce<T extends Element>(
-//   id: string,
-//   selector: string,
-//   context: Document | DocumentFragment | Element = document,
-//   options: {
-//     attribute: DataAttribute;
-//   } = {
-//     attribute: onceAttrName,
-//   },
-// ): T[] {
-//   const elements = context.querySelectorAll<T>(selector);
-//   console.debug('removeOnce', elements);
+export function removeOnce<T extends Element>(
+  onceId: OnceId,
+  selector: string | Element | Iterable<Element> | ArrayLike<Element>,
+  options: {
+    onceAttribute?: DataAttribute;
+    context?: Document | DocumentFragment | Element;
+  } = {},
+): T[] {
+  const { onceAttribute = ONCE_ATTRIBUTE_NAME, context = document } = options;
 
-//   return Array.from(elements);
-// }
+  // Validate the onceId parameter is a valid once ID.
+  assertOnceId(onceId);
+
+  // Validate the onceAttribute parameter is a valid data attribute.
+  assertDataAttribute(onceAttribute);
+
+  // runtime validation: accept string | Element | Iterable<Element> | ArrayLike<Element>
+  if (
+    typeof selector !== 'string' &&
+    !(selector instanceof Element) &&
+    !isIterableElements(selector) &&
+    !isArrayLikeElements(selector)
+  ) {
+    throw new TypeError(
+      'selector must be a string, an Element, an Iterable<Element>, or an array-like collection',
+    );
+  }
+
+  // Quick early return for empty selector string
+  if (typeof selector === 'string' && selector === '') {
+    return [];
+  }
+
+  // string selector branch
+  if (typeof selector === 'string') {
+    if (!context || typeof context.querySelectorAll !== 'function') {
+      throw new TypeError(
+        'context must be a Document, DocumentFragment, or Element',
+      );
+    }
+    const elements: T[] = [];
+    const results = context.querySelectorAll<T>(selector);
+    for (let i = 0; i < results.length; i++) {
+      const el = results[i];
+      if (hasOnceAttributeValue(el, onceId, onceAttribute)) {
+        removeOnceAttributeValue(el, onceId, onceAttribute);
+        elements.push(el);
+      }
+    }
+    return elements;
+  }
+
+  const elements: T[] = [];
+
+  // single Element
+  if (selector instanceof Element) {
+    if (hasOnceAttributeValue(selector, onceId, onceAttribute)) {
+      removeOnceAttributeValue(selector, onceId, onceAttribute);
+      elements.push(selector as T);
+    }
+    return elements;
+  }
+
+  // iterable (NodeList, generator, etc.) — iterate with for..of
+  if (isIterableElements(selector)) {
+    for (const maybeEl of selector) {
+      if (
+        maybeEl instanceof Element &&
+        hasOnceAttributeValue(maybeEl, onceId, onceAttribute)
+      ) {
+        removeOnceAttributeValue(maybeEl, onceId, onceAttribute);
+        elements.push(maybeEl as T);
+      }
+    }
+    return elements;
+  }
+
+  // array-like (HTMLCollection, etc.) — iterate by index
+  if (isArrayLikeElements(selector)) {
+    const list = selector;
+    for (let i = 0, len = list.length; i < len; i++) {
+      const maybeEl = list[i];
+      if (
+        maybeEl instanceof Element &&
+        hasOnceAttributeValue(maybeEl, onceId, onceAttribute)
+      ) {
+        removeOnceAttributeValue(maybeEl, onceId, onceAttribute);
+        elements.push(maybeEl as T);
+      }
+    }
+    return elements;
+  }
+
+  return elements; // defensive (should be unreachable)
+}
 // #endregion PUBLIC_API
