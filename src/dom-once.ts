@@ -358,4 +358,104 @@ export function removeOnce<T extends Element>(
 
   return elements; // defensive (should be unreachable)
 }
+
+/**
+ *
+ */
+export function doOnce<T extends Element>(
+  onceId: OnceId,
+  selector: string | Element | Iterable<Element> | ArrayLike<Element>,
+  callback: (element: T) => void,
+  options: {
+    onceAttribute?: DataAttribute;
+    context?: Document | DocumentFragment | Element;
+  } = {},
+): T[] {
+  const { onceAttribute = ONCE_ATTRIBUTE_NAME, context = document } = options;
+
+  // Validate the onceId parameter is a valid once ID.
+  assertOnceId(onceId);
+
+  // Validate the onceAttribute parameter is a valid data attribute.
+  assertDataAttribute(onceAttribute);
+
+  // runtime validation: accept string | Element | Iterable<Element> | ArrayLike<Element>
+  if (
+    typeof selector !== 'string' &&
+    !(selector instanceof Element) &&
+    !isIterableElements(selector) &&
+    !isArrayLikeElements(selector)
+  ) {
+    throw new TypeError(
+      'selector must be a string, an Element, an Iterable<Element>, or an array-like collection',
+    );
+  }
+
+  // Validate the callback parameter is a function.
+  if (typeof callback !== 'function') {
+    throw new TypeError('callback must be a function');
+  }
+
+  // Quick early return for empty selector string
+  if (typeof selector === 'string' && selector === '') {
+    return [];
+  }
+
+  // string selector branch
+  if (typeof selector === 'string') {
+    const elements = querySelectorOnce<T>(onceId, selector, {
+      onceAttribute,
+      context,
+    });
+    for (const element of elements) {
+      callback(element);
+    }
+    return elements;
+  }
+
+  const elements: T[] = [];
+
+  // single Element
+  if (selector instanceof Element) {
+    if (hasOnceAttributeValue(selector, onceId, onceAttribute)) return elements;
+    callback(selector as T);
+    addOnceAttributeValue(selector, onceId, onceAttribute);
+    elements.push(selector as T);
+    return elements;
+  }
+
+  // iterable (NodeList, generator, etc.) — iterate with for..of
+  if (isIterableElements(selector)) {
+    for (const maybeEl of selector) {
+      if (
+        maybeEl instanceof Element &&
+        !hasOnceAttributeValue(maybeEl, onceId, onceAttribute)
+      ) {
+        callback(maybeEl as T);
+        addOnceAttributeValue(maybeEl, onceId, onceAttribute);
+        elements.push(maybeEl as T);
+      }
+    }
+    return elements;
+  }
+
+  // array-like (HTMLCollection, etc.) — iterate by index
+  if (isArrayLikeElements(selector)) {
+    const list = selector;
+    for (let i = 0, len = list.length; i < len; i++) {
+      const maybeEl = list[i];
+      if (
+        maybeEl instanceof Element &&
+        !hasOnceAttributeValue(maybeEl, onceId, onceAttribute)
+      ) {
+        callback(maybeEl as T);
+        addOnceAttributeValue(maybeEl, onceId, onceAttribute);
+        elements.push(maybeEl as T);
+      }
+    }
+    return elements;
+  }
+
+  return []; // defensive (should be unreachable)
+}
 // #endregion PUBLIC_API
