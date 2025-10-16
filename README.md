@@ -21,3 +21,7 @@ pnpm run test
 ```bash
 pnpm run build
 ```
+
+## License
+
+MIT © [Brian T. Bailey](https://github.com/briantbailey)
