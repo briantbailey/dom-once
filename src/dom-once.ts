@@ -176,20 +176,6 @@ function isArrayLike(value: unknown): value is ArrayLike<unknown> {
     Math.floor(len) === len
   );
 }
-
-/**
- * Checks if a value is iterable and contains only Element instances.
- */
-function isIterableElements(value: unknown): value is Iterable<Element> {
-  return isIterable(value);
-}
-
-/**
- * Checks if a value is array-like and contains only Element instances.
- */
-function isArrayLikeElements(value: unknown): value is ArrayLike<Element> {
-  return isArrayLike(value);
-}
 // #endregion PRIVATE_HELPERS
 
 // =============================================================================
@@ -283,8 +269,8 @@ export function removeOnce<T extends Element>(
   if (
     typeof selector !== 'string' &&
     !(selector instanceof Element) &&
-    !isIterableElements(selector) &&
-    !isArrayLikeElements(selector)
+    !isIterable(selector) &&
+    !isArrayLike(selector)
   ) {
     throw new TypeError(
       'selector must be a string, an Element, an Iterable<Element>, or an array-like collection',
@@ -327,8 +313,8 @@ export function removeOnce<T extends Element>(
   }
 
   // iterable (NodeList, generator, etc.) — iterate with for..of
-  if (isIterableElements(selector)) {
-    for (const maybeEl of selector) {
+  if (isIterable(selector)) {
+    for (const maybeEl of selector as Iterable<unknown>) {
       if (
         maybeEl instanceof Element &&
         hasOnceAttributeValue(maybeEl, onceId, onceAttribute)
@@ -341,10 +327,10 @@ export function removeOnce<T extends Element>(
   }
 
   // array-like (HTMLCollection, etc.) — iterate by index
-  if (isArrayLikeElements(selector)) {
-    const list = selector;
+  if (isArrayLike(selector)) {
+    const list = selector as ArrayLike<unknown>;
     for (let i = 0, len = list.length; i < len; i++) {
-      const maybeEl = list[i];
+      const maybeEl = list[i] as unknown;
       if (
         maybeEl instanceof Element &&
         hasOnceAttributeValue(maybeEl, onceId, onceAttribute)
@@ -383,8 +369,8 @@ export function doOnce<T extends Element>(
   if (
     typeof selector !== 'string' &&
     !(selector instanceof Element) &&
-    !isIterableElements(selector) &&
-    !isArrayLikeElements(selector)
+    !isIterable(selector) &&
+    !isArrayLike(selector)
   ) {
     throw new TypeError(
       'selector must be a string, an Element, an Iterable<Element>, or an array-like collection',
@@ -425,8 +411,8 @@ export function doOnce<T extends Element>(
   }
 
   // iterable (NodeList, generator, etc.) — iterate with for..of
-  if (isIterableElements(selector)) {
-    for (const maybeEl of selector) {
+  if (isIterable(selector)) {
+    for (const maybeEl of selector as Iterable<unknown>) {
       if (
         maybeEl instanceof Element &&
         !hasOnceAttributeValue(maybeEl, onceId, onceAttribute)
@@ -440,10 +426,10 @@ export function doOnce<T extends Element>(
   }
 
   // array-like (HTMLCollection, etc.) — iterate by index
-  if (isArrayLikeElements(selector)) {
-    const list = selector;
+  if (isArrayLike(selector)) {
+    const list = selector as ArrayLike<unknown>;
     for (let i = 0, len = list.length; i < len; i++) {
-      const maybeEl = list[i];
+      const maybeEl = list[i] as unknown;
       if (
         maybeEl instanceof Element &&
         !hasOnceAttributeValue(maybeEl, onceId, onceAttribute)
