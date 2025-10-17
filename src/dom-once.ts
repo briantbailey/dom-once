@@ -110,6 +110,25 @@ function assertValidSelectorTypes(
 }
 
 /**
+ * Assertion function to validate that a context is a valid query context.
+ * Throws a TypeError if the context is not a Document, DocumentFragment, or Element.
+ */
+function assertValidContext(
+  context: unknown,
+): asserts context is Document | DocumentFragment | Element {
+  if (
+    !context ||
+    typeof context !== 'object' ||
+    !('querySelectorAll' in context) ||
+    typeof context.querySelectorAll !== 'function'
+  ) {
+    throw new TypeError(
+      'context must be a Document, DocumentFragment, or Element',
+    );
+  }
+}
+
+/**
  * Adds a once ID to an element's data attribute value.
  * If the ID already exists, no changes are made.
  */
@@ -249,11 +268,7 @@ export function querySelectorOnce<T extends Element>(
   }
 
   // Validate the context parameter is a valid context.
-  if (!context || typeof context.querySelectorAll !== 'function') {
-    throw new TypeError(
-      'context must be a Document, DocumentFragment, or Element',
-    );
-  }
+  assertValidContext(context);
 
   // Single-pass processing for optimal performance
   const elements: T[] = [];
@@ -312,11 +327,8 @@ export function removeOnce<T extends Element>(
 
   // string selector branch
   if (typeof selector === 'string') {
-    if (!context || typeof context.querySelectorAll !== 'function') {
-      throw new TypeError(
-        'context must be a Document, DocumentFragment, or Element',
-      );
-    }
+    // Validate the context parameter is a valid context.
+    assertValidContext(context);
     const elements: T[] = [];
     const results = context.querySelectorAll<T>(selector);
     for (let i = 0; i < results.length; i++) {
@@ -477,5 +489,46 @@ export function doOnce<T extends Element>(
   }
 
   return []; // defensive (should be unreachable)
+}
+
+/**
+ * Finds all elements that have been marked with a specific once id.
+ *
+ * This function searches for elements that have a specific once id,
+ * allowing you to retrieve previously processed elements.
+ *
+ * Behavior:
+ * - Returns all elements that have the specified once id.
+ * - Does not modify elements (read-only operation).
+ * - Elements can have multiple once ids (space-separated).
+ * - Returns empty array if no elements are found.
+ * - Uses CSS attribute selector with ~= for exact token matching.
+ * - Throws TypeError if onceId is invalid.
+ * - Throws TypeError if onceAttribute is invalid.
+ * - Throws TypeError if context is invalid.
+ *
+ * Returns: an array of Elements that have been marked with the once id.
+ */
+export function findOnce<T extends Element>(
+  onceId: OnceId,
+  options: {
+    onceAttribute?: DataAttribute;
+    context?: Document | DocumentFragment | Element;
+  } = {},
+): T[] {
+  const { onceAttribute = ONCE_ATTRIBUTE_NAME, context = document } = options;
+
+  // Validate the onceId parameter is a valid once ID.
+  assertOnceId(onceId);
+
+  // Validate the onceAttribute parameter is a valid data attribute.
+  assertDataAttribute(onceAttribute);
+
+  // Validate the context parameter is a valid context.
+  assertValidContext(context);
+
+  return Array.from(
+    context.querySelectorAll<T>(`[${onceAttribute}~="${onceId}"]`),
+  );
 }
 // #endregion PUBLIC_API

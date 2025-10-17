@@ -1,9 +1,12 @@
 // @vitest-environment happy-dom
 
 import { expect, test, describe, beforeEach } from 'vitest';
-import { querySelectorOnce } from '../src/dom-once';
-import { removeOnce } from '../src/dom-once';
-import { doOnce } from '../src/dom-once';
+import {
+  querySelectorOnce,
+  removeOnce,
+  doOnce,
+  findOnce,
+} from '../src/dom-once';
 import { Window } from 'happy-dom';
 
 const window = new Window({ url: 'https://localhost:8080' });
@@ -1378,6 +1381,604 @@ describe('doOnce', () => {
 
       expect(result).toHaveLength(1);
       expect(callbackExecuted).toBe(true);
+    });
+  });
+});
+
+describe('findOnce', () => {
+  beforeEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  describe('parameter validation', () => {
+    test('onceId cannot be null, undefined, or empty', () => {
+      // @ts-expect-error - Testing null input
+      expect(() => findOnce(null)).toThrow(
+        'Once ID cannot be null, undefined, or empty',
+      );
+      // @ts-expect-error - Testing undefined input
+      expect(() => findOnce(undefined)).toThrow(
+        'Once ID cannot be null, undefined, or empty',
+      );
+      expect(() => findOnce('')).toThrow(
+        'Once ID cannot be null, undefined, or empty',
+      );
+    });
+
+    test('onceId must contain only valid characters', () => {
+      expect(() => findOnce('abc 123')).toThrow(
+        'Invalid once ID: "abc 123". Must contain only letters, numbers, underscores, and hyphens',
+      );
+      expect(() => findOnce('abc@123')).toThrow(
+        'Invalid once ID: "abc@123". Must contain only letters, numbers, underscores, and hyphens',
+      );
+      expect(() => findOnce('abc#123')).toThrow(
+        'Invalid once ID: "abc#123". Must contain only letters, numbers, underscores, and hyphens',
+      );
+    });
+
+    test('valid once IDs should pass validation', () => {
+      expect(() => findOnce('valid-id')).not.toThrow();
+      expect(() => findOnce('valid_id')).not.toThrow();
+      expect(() => findOnce('valid123')).not.toThrow();
+      expect(() => findOnce('valid-id_123')).not.toThrow();
+    });
+
+    test('invalid onceAttribute throws error', () => {
+      expect(() =>
+        // @ts-expect-error - Testing invalid data attribute
+        findOnce('id', { onceAttribute: 'invalid-attr' }),
+      ).toThrow(
+        'Invalid data attribute: "invalid-attr". Must match pattern: /^data-[a-z0-9.:-]+$/',
+      );
+      expect(() => findOnce('id', { onceAttribute: 'data-@invalid' })).toThrow(
+        'Invalid data attribute: "data-@invalid". Must match pattern: /^data-[a-z0-9.:-]+$/',
+      );
+    });
+
+    test('valid data attributes should pass', () => {
+      expect(() =>
+        findOnce('id', { onceAttribute: 'data-custom' }),
+      ).not.toThrow();
+      expect(() =>
+        findOnce('id', { onceAttribute: 'data-custom-attr' }),
+      ).not.toThrow();
+      expect(() =>
+        findOnce('id', { onceAttribute: 'data-custom:attr' }),
+      ).not.toThrow();
+    });
+
+    test('invalid context throws error', () => {
+      // @ts-expect-error - Testing invalid context
+      expect(() => findOnce('id', { context: null })).toThrow(
+        'context must be a Document, DocumentFragment, or Element',
+      );
+      expect(() =>
+        // @ts-expect-error - Testing invalid context
+        findOnce('id', { context: 'string' }),
+      ).toThrow('context must be a Document, DocumentFragment, or Element');
+      // @ts-expect-error - Testing invalid context
+      expect(() => findOnce('id', { context: 123 })).toThrow(
+        'context must be a Document, DocumentFragment, or Element',
+      );
+    });
+
+    test('valid contexts should pass', () => {
+      const div = document.createElement('div');
+      const fragment = document.createDocumentFragment();
+
+      expect(() =>
+        findOnce('id', { context: document as unknown as Document }),
+      ).not.toThrow();
+      expect(() =>
+        findOnce('id', { context: fragment as unknown as DocumentFragment }),
+      ).not.toThrow();
+      expect(() =>
+        findOnce('id', { context: div as unknown as Element }),
+      ).not.toThrow();
+    });
+  });
+
+  describe('basic functionality', () => {
+    test('finds elements with matching once id', () => {
+      document.body.innerHTML =
+        '<div data-dom-once="my-id"></div><div data-dom-once="my-id"></div>';
+
+      const elements = findOnce('my-id', {
+        context: document as unknown as Document,
+      });
+
+      expect(elements).toHaveLength(2);
+      expect(elements[0].getAttribute('data-dom-once')).toBe('my-id');
+      expect(elements[1].getAttribute('data-dom-once')).toBe('my-id');
+    });
+
+    test('returns empty array when no elements match', () => {
+      document.body.innerHTML =
+        '<div data-dom-once="other-id"></div><div></div>';
+
+      const elements = findOnce('my-id', {
+        context: document as unknown as Document,
+      });
+
+      expect(elements).toEqual([]);
+    });
+
+    test('returns empty array when no elements exist', () => {
+      document.body.innerHTML = '';
+
+      const elements = findOnce('my-id', {
+        context: document as unknown as Document,
+      });
+
+      expect(elements).toEqual([]);
+    });
+
+    test('finds elements with multiple once ids', () => {
+      document.body.innerHTML =
+        '<div data-dom-once="first-id second-id"></div><div data-dom-once="second-id third-id"></div>';
+
+      const elements = findOnce('second-id', {
+        context: document as unknown as Document,
+      });
+
+      expect(elements).toHaveLength(2);
+    });
+
+    test('matches only exact whitespace-delimited tokens', () => {
+      document.body.innerHTML =
+        '<div data-dom-once="exact-match"></div><div data-dom-once="my id exact-match"></div><div data-dom-once="exact-match other"></div>';
+
+      const elements = findOnce('exact-match', {
+        context: document as unknown as Document,
+      });
+
+      // Should match all three because "exact-match" appears as a complete token in each
+      expect(elements).toHaveLength(3);
+    });
+
+    test('matches exact once id with whitespace-separated values', () => {
+      document.body.innerHTML = '<div data-dom-once="first my-id last"></div>';
+
+      const elements = findOnce('my-id', {
+        context: document as unknown as Document,
+      });
+
+      expect(elements).toHaveLength(1);
+    });
+  });
+
+  describe('options parameter', () => {
+    test('uses default onceAttribute when not provided', () => {
+      document.body.innerHTML = '<div data-dom-once="my-id"></div>';
+
+      const elements = findOnce('my-id', {
+        context: document as unknown as Document,
+      });
+
+      expect(elements).toHaveLength(1);
+    });
+
+    test('uses custom onceAttribute when provided', () => {
+      document.body.innerHTML =
+        '<div data-custom="my-id"></div><div data-dom-once="my-id"></div>';
+
+      const elements = findOnce('my-id', {
+        onceAttribute: 'data-custom',
+        context: document as unknown as Document,
+      });
+
+      expect(elements).toHaveLength(1);
+      expect(elements[0].getAttribute('data-custom')).toBe('my-id');
+      expect(elements[0].hasAttribute('data-dom-once')).toBe(false);
+    });
+
+    test('uses default context (document) when not provided', () => {
+      document.body.innerHTML = '<div data-dom-once="my-id"></div>';
+
+      // Note: In test environment, findOnce uses the global document object
+      // which should find elements in document.body
+      const elements = findOnce('my-id', {
+        context: document as unknown as Document,
+      });
+
+      expect(elements).toHaveLength(1);
+    });
+
+    test('uses custom context when provided', () => {
+      const fragment = document.createDocumentFragment();
+      const div1 = document.createElement('div');
+      const div2 = document.createElement('div');
+      div1.setAttribute('data-dom-once', 'my-id');
+      div2.setAttribute('data-dom-once', 'my-id');
+      fragment.appendChild(div1);
+      fragment.appendChild(div2);
+
+      const elements = findOnce('my-id', {
+        context: fragment as unknown as DocumentFragment,
+      });
+
+      expect(elements).toHaveLength(2);
+      expect(elements).toContain(div1);
+      expect(elements).toContain(div2);
+    });
+
+    test('context limits search scope', () => {
+      document.body.innerHTML =
+        '<div id="container" data-dom-once="my-id"><div data-dom-once="my-id"></div></div><div data-dom-once="my-id"></div>';
+
+      const container = document.querySelector('#container')!;
+      const elements = findOnce('my-id', {
+        context: container as unknown as Element,
+      });
+
+      // Should only find the child div inside the container, not the container itself or sibling
+      expect(elements).toHaveLength(1);
+      expect(elements[0].parentElement).toBe(container);
+    });
+
+    test('partial options object works correctly', () => {
+      document.body.innerHTML = '<div data-dom-once="my-id"></div>';
+
+      // Only provide context, use default onceAttribute
+      const elements1 = findOnce('my-id', {
+        context: document as unknown as Document,
+      });
+      expect(elements1).toHaveLength(1);
+
+      // Only provide onceAttribute, use explicit context
+      document.body.innerHTML = '<div data-custom="id-2"></div>';
+      const elements2 = findOnce('id-2', {
+        onceAttribute: 'data-custom',
+        context: document as unknown as Document,
+      });
+      expect(elements2).toHaveLength(1);
+    });
+
+    test('empty options object uses defaults', () => {
+      document.body.innerHTML = '<div data-dom-once="my-id"></div>';
+
+      const elements = findOnce('my-id', {
+        context: document as unknown as Document,
+      });
+
+      expect(elements).toHaveLength(1);
+    });
+  });
+
+  describe('return values', () => {
+    test('returns array of elements', () => {
+      document.body.innerHTML =
+        '<div data-dom-once="my-id"></div><div data-dom-once="my-id"></div>';
+
+      const result = findOnce('my-id', {
+        context: document as unknown as Document,
+      });
+
+      expect(Array.isArray(result)).toBe(true);
+      expect(result).toHaveLength(2);
+    });
+
+    test('returns empty array when no matches', () => {
+      document.body.innerHTML = '<div></div>';
+
+      const result = findOnce('my-id', {
+        context: document as unknown as Document,
+      });
+
+      expect(Array.isArray(result)).toBe(true);
+      expect(result).toEqual([]);
+    });
+
+    test('returned array contains Element instances', () => {
+      document.body.innerHTML = '<div data-dom-once="my-id"></div>';
+
+      const result = findOnce('my-id', {
+        context: document as unknown as Document,
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toBeInstanceOf(Element);
+    });
+
+    test('returns elements in document order', () => {
+      document.body.innerHTML =
+        '<div id="first" data-dom-once="my-id"></div><div id="second" data-dom-once="my-id"></div><div id="third" data-dom-once="my-id"></div>';
+
+      const result = findOnce('my-id', {
+        context: document as unknown as Document,
+      });
+
+      expect(result).toHaveLength(3);
+      expect(result[0].id).toBe('first');
+      expect(result[1].id).toBe('second');
+      expect(result[2].id).toBe('third');
+    });
+  });
+
+  describe('multiple once IDs on elements', () => {
+    test('finds elements with multiple once ids by specific id', () => {
+      document.body.innerHTML =
+        '<div data-dom-once="first-id second-id third-id"></div>';
+
+      const elementsFirst = findOnce('first-id', {
+        context: document as unknown as Document,
+      });
+      const elementsSecond = findOnce('second-id', {
+        context: document as unknown as Document,
+      });
+      const elementsThird = findOnce('third-id', {
+        context: document as unknown as Document,
+      });
+
+      expect(elementsFirst).toHaveLength(1);
+      expect(elementsSecond).toHaveLength(1);
+      expect(elementsThird).toHaveLength(1);
+      expect(elementsFirst[0]).toBe(elementsSecond[0]);
+      expect(elementsSecond[0]).toBe(elementsThird[0]);
+    });
+
+    test('finds subset of elements matching specific id', () => {
+      document.body.innerHTML =
+        '<div data-dom-once="first-id second-id"></div><div data-dom-once="second-id third-id"></div><div data-dom-once="first-id third-id"></div>';
+
+      const elementsFirst = findOnce('first-id', {
+        context: document as unknown as Document,
+      });
+      const elementsSecond = findOnce('second-id', {
+        context: document as unknown as Document,
+      });
+      const elementsThird = findOnce('third-id', {
+        context: document as unknown as Document,
+      });
+
+      expect(elementsFirst).toHaveLength(2);
+      expect(elementsSecond).toHaveLength(2);
+      expect(elementsThird).toHaveLength(2);
+    });
+
+    test('handles whitespace-separated once ids', () => {
+      document.body.innerHTML =
+        '<div data-dom-once="  first-id   second-id  third-id  "></div>';
+
+      const elements = findOnce('second-id', {
+        context: document as unknown as Document,
+      });
+
+      expect(elements).toHaveLength(1);
+    });
+  });
+
+  describe('edge cases', () => {
+    test('works with complex element structures', () => {
+      document.body.innerHTML =
+        '<div class="parent" data-dom-once="my-id"><span class="child" data-dom-once="my-id"></span></div>';
+
+      const elements = findOnce('my-id', {
+        context: document as unknown as Document,
+      });
+
+      expect(elements).toHaveLength(2);
+    });
+
+    test('works with different element types', () => {
+      document.body.innerHTML =
+        '<div data-dom-once="my-id"></div><span data-dom-once="my-id"></span><input data-dom-once="my-id"><p data-dom-once="my-id"></p>';
+
+      const elements = findOnce('my-id', {
+        context: document as unknown as Document,
+      });
+
+      expect(elements).toHaveLength(4);
+      expect(elements[0].tagName).toBe('DIV');
+      expect(elements[1].tagName).toBe('SPAN');
+      expect(elements[2].tagName).toBe('INPUT');
+      expect(elements[3].tagName).toBe('P');
+    });
+
+    test('works with nested contexts', () => {
+      const parent = document.createElement('div');
+      const child1 = document.createElement('div');
+      const child2 = document.createElement('div');
+      child1.setAttribute('data-dom-once', 'my-id');
+      child2.setAttribute('data-dom-once', 'my-id');
+      parent.appendChild(child1);
+      parent.appendChild(child2);
+
+      const elements = findOnce('my-id', {
+        context: parent as unknown as Element,
+      });
+
+      expect(elements).toHaveLength(2);
+    });
+
+    test('works with DocumentFragment context', () => {
+      const fragment = document.createDocumentFragment();
+      const div1 = document.createElement('div');
+      const div2 = document.createElement('div');
+      div1.setAttribute('data-dom-once', 'my-id');
+      div2.setAttribute('data-dom-once', 'other-id');
+      fragment.appendChild(div1);
+      fragment.appendChild(div2);
+
+      const elements = findOnce('my-id', {
+        context: fragment as unknown as DocumentFragment,
+      });
+
+      expect(elements).toHaveLength(1);
+      expect(elements[0]).toBe(div1);
+    });
+
+    test('handles once ids with special characters allowed in pattern', () => {
+      document.body.innerHTML =
+        '<div data-dom-once="my-id_123"></div><div data-dom-once="my-id-456"></div><div data-dom-once="myID789"></div>';
+
+      const elements1 = findOnce('my-id_123', {
+        context: document as unknown as Document,
+      });
+      const elements2 = findOnce('my-id-456', {
+        context: document as unknown as Document,
+      });
+      const elements3 = findOnce('myID789', {
+        context: document as unknown as Document,
+      });
+
+      expect(elements1).toHaveLength(1);
+      expect(elements2).toHaveLength(1);
+      expect(elements3).toHaveLength(1);
+    });
+
+    test('empty document returns empty array', () => {
+      document.body.innerHTML = '';
+
+      const elements = findOnce('my-id', {
+        context: document as unknown as Document,
+      });
+
+      expect(elements).toEqual([]);
+    });
+
+    test('does not modify elements', () => {
+      document.body.innerHTML = '<div data-dom-once="my-id"></div>';
+      const div = document.querySelector('div')!;
+      const originalAttribute = div.getAttribute('data-dom-once');
+
+      findOnce('my-id', {
+        context: document as unknown as Document,
+      });
+
+      expect(div.getAttribute('data-dom-once')).toBe(originalAttribute);
+    });
+
+    test('works correctly after elements added via querySelectorOnce', () => {
+      document.body.innerHTML =
+        '<div class="test"></div><div class="test"></div>';
+
+      querySelectorOnce('my-id', '.test', {
+        context: document as unknown as Document,
+      });
+
+      const elements = findOnce('my-id', {
+        context: document as unknown as Document,
+      });
+
+      expect(elements).toHaveLength(2);
+    });
+
+    test('works correctly after elements processed via doOnce', () => {
+      document.body.innerHTML =
+        '<div class="test"></div><div class="test"></div>';
+
+      doOnce('my-id', '.test', () => {}, {
+        context: document as unknown as Document,
+      });
+
+      const elements = findOnce('my-id', {
+        context: document as unknown as Document,
+      });
+
+      expect(elements).toHaveLength(2);
+    });
+
+    test('finds only elements not removed by removeOnce', () => {
+      document.body.innerHTML =
+        '<div class="test" data-dom-once="my-id"></div><div class="test" data-dom-once="my-id"></div>';
+
+      const firstDiv = document.querySelector('.test')!;
+      removeOnce('my-id', firstDiv as unknown as HTMLDivElement);
+
+      const elements = findOnce('my-id', {
+        context: document as unknown as Document,
+      });
+
+      expect(elements).toHaveLength(1);
+      expect(elements[0]).not.toBe(firstDiv);
+    });
+  });
+
+  describe('integration with other functions', () => {
+    test('findOnce after querySelectorOnce returns same elements', () => {
+      document.body.innerHTML =
+        '<div class="test"></div><div class="test"></div>';
+
+      const queried = querySelectorOnce('my-id', '.test', {
+        context: document as unknown as Document,
+      });
+      const found = findOnce('my-id', {
+        context: document as unknown as Document,
+      });
+
+      expect(found).toEqual(queried);
+    });
+
+    test('findOnce after doOnce returns processed elements', () => {
+      document.body.innerHTML =
+        '<div class="test"></div><div class="test"></div>';
+
+      const processed = doOnce('my-id', '.test', () => {}, {
+        context: document as unknown as Document,
+      });
+      const found = findOnce('my-id', {
+        context: document as unknown as Document,
+      });
+
+      expect(found).toEqual(processed);
+    });
+
+    test('findOnce combined with custom onceAttribute across functions', () => {
+      document.body.innerHTML =
+        '<div class="test"></div><div class="test"></div>';
+
+      querySelectorOnce('my-id', '.test', {
+        onceAttribute: 'data-custom',
+        context: document as unknown as Document,
+      });
+
+      const found = findOnce('my-id', {
+        onceAttribute: 'data-custom',
+        context: document as unknown as Document,
+      });
+
+      expect(found).toHaveLength(2);
+    });
+
+    test('findOnce returns empty after removeOnce removes all instances', () => {
+      document.body.innerHTML =
+        '<div class="test" data-dom-once="my-id"></div><div class="test" data-dom-once="my-id"></div>';
+
+      removeOnce('my-id', '.test', {
+        context: document as unknown as Document,
+      });
+
+      const found = findOnce('my-id', {
+        context: document as unknown as Document,
+      });
+
+      expect(found).toEqual([]);
+    });
+  });
+
+  describe('type safety', () => {
+    test('returns correctly typed elements', () => {
+      document.body.innerHTML = '<div data-dom-once="my-id"></div>';
+
+      const elements = findOnce<HTMLDivElement>('my-id', {
+        context: document as unknown as Document,
+      });
+
+      expect(elements).toHaveLength(1);
+      expect(elements[0]).toBeInstanceOf(Element);
+    });
+
+    test('works with specific element type queries', () => {
+      document.body.innerHTML =
+        '<input data-dom-once="my-id"><button data-dom-once="my-id">';
+
+      const inputs = findOnce<HTMLInputElement>('my-id', {
+        context: document as unknown as Document,
+      });
+
+      expect(inputs).toHaveLength(2);
     });
   });
 });
