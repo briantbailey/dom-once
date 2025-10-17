@@ -86,6 +86,30 @@ function assertOnceId(value: string): asserts value is OnceId {
 }
 
 /**
+ * Assertion function to validate that a selector is one of the accepted types:
+ * string, Element, Iterable<Element>, or ArrayLike<Element>.
+ * Throws a TypeError if the selector doesn't match any of these types.
+ */
+function assertValidSelectorTypes(
+  selector: unknown,
+): asserts selector is
+  | string
+  | Element
+  | Iterable<Element>
+  | ArrayLike<Element> {
+  if (
+    typeof selector !== 'string' &&
+    !(selector instanceof Element) &&
+    !isIterable(selector) &&
+    !isArrayLike(selector)
+  ) {
+    throw new TypeError(
+      'selector must be a string, an Element, an Iterable<Element>, or an array-like collection',
+    );
+  }
+}
+
+/**
  * Adds a once ID to an element's data attribute value.
  * If the ID already exists, no changes are made.
  */
@@ -183,7 +207,20 @@ function isArrayLike(value: unknown): value is ArrayLike<unknown> {
 // =============================================================================
 // #region PUBLIC_API
 /**
- * Queries for elements and adds the once id to the element's once data attribute value.
+ * Queries for elements using a CSS selector and marks them with a once id.
+ *
+ * Accepted selector types:
+ * - string: a CSS selector (queried with `context.querySelectorAll`)
+ *
+ * Behavior:
+ * - Only returns elements that don't already have the once id.
+ * - Adds the once id to each returned element's data attribute.
+ * - Multiple once ids can be added to the same element (space-separated).
+ * - Empty selector string returns empty array (consistent with querySelectorAll).
+ * - Throws TypeError if selector is not a string.
+ * - Throws TypeError if context is invalid.
+ *
+ * Returns: an array of Elements that were newly marked with the once id.
  */
 export function querySelectorOnce<T extends Element>(
   onceId: OnceId,
@@ -265,17 +302,8 @@ export function removeOnce<T extends Element>(
   // Validate the onceAttribute parameter is a valid data attribute.
   assertDataAttribute(onceAttribute);
 
-  // runtime validation: accept string | Element | Iterable<Element> | ArrayLike<Element>
-  if (
-    typeof selector !== 'string' &&
-    !(selector instanceof Element) &&
-    !isIterable(selector) &&
-    !isArrayLike(selector)
-  ) {
-    throw new TypeError(
-      'selector must be a string, an Element, an Iterable<Element>, or an array-like collection',
-    );
-  }
+  // Validate the selector parameter is one of the accepted types.
+  assertValidSelectorTypes(selector);
 
   // Quick early return for empty selector string
   if (typeof selector === 'string' && selector === '') {
@@ -346,7 +374,22 @@ export function removeOnce<T extends Element>(
 }
 
 /**
+ * Executes a callback once per element, marking elements with a once id to prevent re-execution.
  *
+ * Accepted selector types:
+ * - string: a CSS selector (queried with `context.querySelectorAll`)
+ * - Element: a single element
+ * - Iterable<Element>: any iterable of Elements (NodeList, generator, etc.)
+ * - ArrayLike<Element>: array-like collections (Array, HTMLCollection, etc.)
+ *
+ * Behavior:
+ * - Only executes callback for elements that don't already have the once id.
+ * - Adds the once id to each element after the callback executes.
+ * - Multiple once ids can be added to the same element (space-separated).
+ * - Throws TypeError for unsupported selector shapes (important for IIFE / runtime consumers).
+ * - Throws TypeError if callback is not a function.
+ *
+ * Returns: an array of Elements that were processed (had callback executed and once id added).
  */
 export function doOnce<T extends Element>(
   onceId: OnceId,
@@ -365,17 +408,8 @@ export function doOnce<T extends Element>(
   // Validate the onceAttribute parameter is a valid data attribute.
   assertDataAttribute(onceAttribute);
 
-  // runtime validation: accept string | Element | Iterable<Element> | ArrayLike<Element>
-  if (
-    typeof selector !== 'string' &&
-    !(selector instanceof Element) &&
-    !isIterable(selector) &&
-    !isArrayLike(selector)
-  ) {
-    throw new TypeError(
-      'selector must be a string, an Element, an Iterable<Element>, or an array-like collection',
-    );
-  }
+  // Validate the selector parameter is one of the accepted types.
+  assertValidSelectorTypes(selector);
 
   // Validate the callback parameter is a function.
   if (typeof callback !== 'function') {

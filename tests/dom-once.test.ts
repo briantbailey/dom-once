@@ -449,6 +449,59 @@ describe('removeOnce', () => {
     expect(removed).toEqual([el]);
     expect(el.hasAttribute('data-dom-once')).toBe(false);
   });
+
+  test('removeOnce works with custom onceAttribute', () => {
+    const el = document.createElement('div');
+    el.setAttribute('data-custom-attr', 'test-id');
+    const removed = removeOnce('test-id', el as unknown as HTMLDivElement, {
+      onceAttribute: 'data-custom-attr',
+    });
+    expect(removed).toEqual([el]);
+    expect(el.hasAttribute('data-custom-attr')).toBe(false);
+  });
+
+  test('removeOnce iterable with non-Element values in generator', () => {
+    const el1 = document.createElement('div');
+    const el2 = document.createElement('div');
+    el1.setAttribute('data-dom-once', 'x');
+    el2.setAttribute('data-dom-once', 'x');
+
+    function* gen() {
+      yield el1;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      yield null as any;
+      yield el2;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      yield 'not an element' as any;
+    }
+
+    const result = removeOnce('x', gen() as unknown as Iterable<Element>);
+    expect(result).toEqual([el1, el2]);
+    expect(el1.hasAttribute('data-dom-once')).toBe(false);
+    expect(el2.hasAttribute('data-dom-once')).toBe(false);
+  });
+
+  test('removeOnce array-like with non-Element values', () => {
+    const el1 = document.createElement('div');
+    const el2 = document.createElement('div');
+    el1.setAttribute('data-dom-once', 'test');
+    el2.setAttribute('data-dom-once', 'test');
+
+    // Create array-like object with mixed values
+    const arrayLike = {
+      0: el1,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      1: null as any,
+      2: el2,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      3: 'string' as any,
+      length: 4,
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = removeOnce('test', arrayLike as any);
+    expect(result).toEqual([el1, el2]);
+  });
 });
 
 describe('doOnce', () => {
@@ -869,6 +922,37 @@ describe('doOnce', () => {
 
       expect(result).toHaveLength(2);
       expect(callbackCount).toBe(2);
+    });
+
+    test('processes array-like object with non-Element values', () => {
+      const el1 = document.createElement('div');
+      const el2 = document.createElement('div');
+
+      // Create array-like object with mixed values
+      const arrayLike = {
+        0: el1,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        1: null as any,
+        2: el2,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        3: 'string' as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        4: {} as any,
+        length: 5,
+      };
+
+      let callbackCount = 0;
+      const callback = () => {
+        callbackCount++;
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = doOnce('my-id', arrayLike as any, callback);
+
+      expect(result).toEqual([el1, el2]);
+      expect(callbackCount).toBe(2);
+      expect(el1.getAttribute('data-dom-once')).toBe('my-id');
+      expect(el2.getAttribute('data-dom-once')).toBe('my-id');
     });
 
     test('caches length to handle live collections', () => {
