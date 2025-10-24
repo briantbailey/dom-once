@@ -1,5 +1,18 @@
 /**
- * @file dom-once.ts
+ * dom-once — Simple utilities to manipulate DOM elements only once.
+ *
+ * Public API:
+ * - querySelectorOnce: query and mark elements with a once id
+ * - doOnce: run a callback once per element
+ * - removeOnce: remove a once id from elements
+ * - findOnce: find elements marked with a once id
+ * - version: current library version
+ *
+ * @file src/dom-once.ts
+ * @package dom-once
+ * @author Brian T. Bailey
+ * @license MIT
+ * @see https://github.com/briantbailey/dom-once
  */
 
 // =============================================================================
@@ -33,7 +46,6 @@ export { version } from './version';
  */
 const ONCE_ATTRIBUTE_NAME: DataAttribute = 'data-dom-once';
 
-// PRIVATE
 /**
  * Regular expression to match whitespace.
  */
@@ -251,13 +263,9 @@ export function querySelectorOnce<T extends Element>(
 ): T[] {
   const { onceAttribute = ONCE_ATTRIBUTE_NAME, context = document } = options;
 
-  // Validate the onceId parameter is a valid once ID.
   assertOnceId(onceId);
-
-  // Validate the onceAttribute parameter is a valid data attribute.
   assertDataAttribute(onceAttribute);
 
-  // Validate the selector parameter is a string.
   if (typeof selector !== 'string') {
     throw new TypeError('selector must be a string');
   }
@@ -267,10 +275,8 @@ export function querySelectorOnce<T extends Element>(
     return [];
   }
 
-  // Validate the context parameter is a valid context.
   assertValidContext(context);
 
-  // Single-pass processing for optimal performance
   const elements: T[] = [];
   const queryResults = context.querySelectorAll<T>(selector);
 
@@ -311,13 +317,8 @@ export function removeOnce<T extends Element>(
 ): T[] {
   const { onceAttribute = ONCE_ATTRIBUTE_NAME, context = document } = options;
 
-  // Validate the onceId parameter is a valid once ID.
   assertOnceId(onceId);
-
-  // Validate the onceAttribute parameter is a valid data attribute.
   assertDataAttribute(onceAttribute);
-
-  // Validate the selector parameter is one of the accepted types.
   assertValidSelectorTypes(selector);
 
   // Quick early return for empty selector string
@@ -327,8 +328,8 @@ export function removeOnce<T extends Element>(
 
   // string selector branch
   if (typeof selector === 'string') {
-    // Validate the context parameter is a valid context.
     assertValidContext(context);
+
     const elements: T[] = [];
     const results = context.querySelectorAll<T>(selector);
     for (let i = 0; i < results.length; i++) {
@@ -414,16 +415,10 @@ export function doOnce<T extends Element>(
 ): T[] {
   const { onceAttribute = ONCE_ATTRIBUTE_NAME, context = document } = options;
 
-  // Validate the onceId parameter is a valid once ID.
   assertOnceId(onceId);
-
-  // Validate the onceAttribute parameter is a valid data attribute.
   assertDataAttribute(onceAttribute);
-
-  // Validate the selector parameter is one of the accepted types.
   assertValidSelectorTypes(selector);
 
-  // Validate the callback parameter is a function.
   if (typeof callback !== 'function') {
     throw new TypeError('callback must be a function');
   }
@@ -518,13 +513,8 @@ export function findOnce<T extends Element>(
 ): T[] {
   const { onceAttribute = ONCE_ATTRIBUTE_NAME, context = document } = options;
 
-  // Validate the onceId parameter is a valid once ID.
   assertOnceId(onceId);
-
-  // Validate the onceAttribute parameter is a valid data attribute.
   assertDataAttribute(onceAttribute);
-
-  // Validate the context parameter is a valid context.
   assertValidContext(context);
 
   return Array.from(
