@@ -21,7 +21,7 @@
     "dist"
   ],
   "main": "./dist/dom-once.js",
-  "module": "./dist/don-once.js",
+  "module": "./dist/dom-once.js",
   "types": "./dist/dom-once.d.ts",
   "exports": {
     ".": "./dist/dom-once.js",
