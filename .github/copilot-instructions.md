@@ -11,13 +11,18 @@ These instructions guide AI coding agents working in this repository. They codif
 
 ## Conventions and patterns
 
-- Top-of-file header: JSDoc-style banner with brief API summary and MIT license note.
-- Types: `DataAttribute` is a branded template string type (e.g., `data-foo`); `OnceId` is a validated string (alphanumeric plus `_` and `-`).
-- Validation helpers throw early (`assertOnceId`, `assertDataAttribute`, `assertValidSelectorTypes`, `assertValidContext`). Reflect these behaviors in new APIs.
+- Top-of-file header: JSDoc banner with a brief API summary and an `@module` tag matching the package name (e.g., `@briantbailey/dom-once`). License and author are documented in `LICENSE` and `package.json` and are not repeated in source headers.
+- Types: `DataAttribute` is a branded template string type (e.g., `data-foo`) that must start with `data-` and allows `[a-z0-9.:-]`; `OnceId` is a validated string (alphanumeric plus `_` and `-`).
+- Validation helpers throw early (`assertValidOnceId`, `assertValidDataAttribute`, `assertValidSelectorTypes`, `assertValidContext`). Reflect these behaviors in new APIs.
 - Attribute name constant: default is `data-dom-once` (see `ONCE_ATTRIBUTE_NAME`). Keep tokens space-delimited; match with CSS `[attr~="token"]`.
 - Performance: prefer `element.matches(`[${attr}~="${id}"]`)` to avoid string splitting when checking membership.
 - Do not hardcode the package version; import `{ version }` from `src/version.ts`.
+- Also re-export `version` at the top of `src/dom-once.ts` with a brief one-line JSDoc for discoverability in editors and docs.
 - Maintain exhaustive but minimal branching for selector shapes: string | Element | Iterable<Element> | ArrayLike<Element>.
+- Public API JSDoc: include `@param`, `@returns`, `@template` (for generics), and a few concise `@example` blocks to aid IntelliSense and JSR docs. Keep examples short and practical.
+- Keep public JSDoc concise overall to balance readability and JSR-generated docs; prefer focused descriptions over exhaustive prose.
+- Prefer 1–2 short `@example` blocks per function; reference `tests/dom-once.test.ts` for extended scenarios.
+- Section organization: place region markers above the visual separators so folding collapses the entire section (header + separator + content).
 
 ## Build, test, and lint
 
