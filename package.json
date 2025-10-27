@@ -1,7 +1,7 @@
 {
-  "name": "dom-once",
+  "name": "@briantbailey/dom-once",
   "version": "0.0.0",
-  "description": "Simple utilities to manipulate DOM elements only once.",
+  "description": "Simple utilities to select and manipulate DOM elements only once.",
   "type": "module",
   "license": "MIT",
   "homepage": "https://github.com/briantbailey/dom-once#readme",
@@ -13,6 +13,10 @@
     "url": "https://github.com/briantbailey/dom-once.git"
   },
   "author": "Brian T. Bailey",
+  "engines": {
+    "node": ">=18.12.0",
+    "pnpm": ">=9.0.0"
+  },
   "files": [
     "dist"
   ],
