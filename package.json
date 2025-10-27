@@ -1,6 +1,6 @@
 {
   "name": "@briantbailey/dom-once",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Simple utilities to select and manipulate DOM elements only once.",
   "type": "module",
   "license": "MIT",
