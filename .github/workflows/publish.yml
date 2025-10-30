@@ -1,0 +1,63 @@
+name: Publish
+
+permissions:
+  id-token: write # Required for OIDC
+  contents: read
+
+on:
+  workflow_run:
+    workflows: ['Release'] # must match the `name:` field in release.yml
+    types:
+      - completed
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - name: Get tag name
+        id: tag
+        run: |
+          TAG=$(git describe --tags --exact-match 2>/dev/null || echo "")
+          echo "name=$TAG" >> $GITHUB_OUTPUT
+          echo "Tag: $TAG"
+
+      - name: Check if test tag
+        id: check
+        run: |
+          if [[ "${{ steps.tag.outputs.name }}" == test-v* ]]; then
+            echo "is_test=true" >> $GITHUB_OUTPUT
+            echo "This is a test tag, skipping publish"
+          else
+            echo "is_test=false" >> $GITHUB_OUTPUT
+            echo "Production tag, will publish"
+          fi
+
+      - name: Install pnpm
+        if: steps.check.outputs.is_test == 'false'
+        uses: pnpm/action-setup@v4
+
+      - name: Set node LTS
+        if: steps.check.outputs.is_test == 'false'
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install
+        if: steps.check.outputs.is_test == 'false'
+        run: pnpm install
+
+      - name: Build
+        if: steps.check.outputs.is_test == 'false'
+        run: pnpm run build
+
+      - name: Publish
+        if: steps.check.outputs.is_test == 'false'
+        run: pnpm publish --no-git-checks
