@@ -2,5 +2,8 @@
   "name": "@briantbailey/dom-once",
   "version": "0.1.2",
   "license": "MIT",
-  "exports": "./src/dom-once.ts"
+  "exports": "./src/dom-once.ts",
+  "publish": {
+    "include": ["LICENSE", "README.md", "src/**/*.ts"]
+  }
 }
