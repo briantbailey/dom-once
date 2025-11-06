@@ -58,6 +58,10 @@ jobs:
         if: steps.check.outputs.is_test == 'false'
         run: pnpm run build
 
-      - name: Publish
+      - name: Publish on npmjs
         if: steps.check.outputs.is_test == 'false'
         run: pnpm publish --no-git-checks
+
+      - name: Publish on jsr.io
+        if: steps.check.outputs.is_test == 'false'
+        run: pnpx jsr publish
