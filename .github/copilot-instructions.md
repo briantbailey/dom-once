@@ -72,6 +72,7 @@ pnpm run coverage   # vitest coverage
 
 ## References
 
+- User documentation: `README.md`
 - Example implementation: `src/dom-once.ts`
 - Tests that define behavior: `tests/dom-once.test.ts`
 - Build config: `tsdown.config.ts`, `tsconfig.json`, `vitest.config.ts`
