@@ -1,3 +1,9 @@
+## <small>0.3.1 (2025-11-16)</small>
+
+* docs: add CHANGELOG ([defea64](https://github.com/briantbailey/dom-once/commit/defea64))
+
+
+
 ## 0.2.0 (2025-11-06)
 
 * chore: release v0.2.0 ([5691e4a](https://github.com/briantbailey/dom-once/commit/5691e4a))
