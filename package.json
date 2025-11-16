@@ -44,7 +44,7 @@
     "release": "bumpp --all --execute \"pnpm run release:script\"",
     "publish:npmjs": "pnpm publish",
     "publish:jsr": "pnpx jsr publish",
-    "changelog": "conventional-changelog -p conventionalcommits -i CHANGELOG.md -s -r 0"
+    "changelog": "conventional-changelog -p conventionalcommits -i CHANGELOG.md -s -r 1"
   },
   "devDependencies": {
     "@eslint/js": "^9.38.0",
