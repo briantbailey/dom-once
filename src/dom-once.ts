@@ -205,14 +205,16 @@ function isArrayLike(value: unknown): value is ArrayLike<unknown> {
  * @returns {Element[]} Elements that were newly marked with the once id
  *
  * @example
- * // Mark all buttons
- * ```
+ * Mark all buttons
+ *
+ * ```ts
  * const buttons = querySelectorOnce('init', 'button');
  * ```
  *
  * @example
- * // With custom attribute and context
- * ```
+ * With custom attribute and context
+ *
+ * ```ts
  * const items = querySelectorOnce('processed', '.item', {
  *   onceAttribute: 'data-my-tracker',
  *   context: document.querySelector('#container')
@@ -272,21 +274,24 @@ export function querySelectorOnce<T extends Element>(
  * @returns {Element[]} Elements that had the once id removed
  *
  * @example
- * // Remove from all matching elements
- * ```
+ * Remove from all matching elements
+ *
+ * ```ts
  * const removed = removeOnce('init', '.processed');
  * ```
  *
  * @example
- * // Remove from a NodeList
- * ```
+ * Remove from a NodeList
+ *
+ * ```ts
  * const elements = document.querySelectorAll('.item');
  * removeOnce('processed', elements);
  * ```
  *
  * @example
- * // Remove from a single element
- * ```
+ * Remove from a single element
+ *
+ * ```ts
  * const button = document.querySelector('button');
  * removeOnce('clicked', button);
  * ```
@@ -386,16 +391,18 @@ export function removeOnce<T extends Element>(
  * @returns {Element[]} Elements that were processed (had callback executed and once id added)
  *
  * @example
- * // Initialize all buttons once
- * ```
+ * Initialize all buttons once
+ *
+ * ```ts
  * doOnce('init', 'button', (btn) => {
  *   btn.addEventListener('click', handleClick);
  * });
  * ```
  *
  * @example
- * // Process a NodeList
- * ```
+ * Process a NodeList
+ *
+ * ```ts
  * const items = document.querySelectorAll('.item');
  * doOnce('animate', items, (item) => {
  *   item.classList.add('animated');
@@ -403,8 +410,9 @@ export function removeOnce<T extends Element>(
  * ```
  *
  * @example
- * // With custom tracking attribute
- * ```
+ * With custom tracking attribute
+ *
+ * ```ts
  * doOnce('setup', '.widget', setupWidget, {
  *   onceAttribute: 'data-initialized'
  * });
@@ -507,22 +515,25 @@ export function doOnce<T extends Element>(
  * @returns {Element[]} Elements that have been marked with the once id
  *
  * @example
- * // Find all initialized buttons
- * ```
+ * Find all initialized buttons
+ *
+ * ```ts
  * const initializedButtons = findOnce('init');
  * ```
  *
  * @example
- * // Find within a specific container
- * ```
+ * Find within a specific container
+ *
+ * ```ts
  * const processedItems = findOnce('processed', {
  *   context: document.querySelector('#container')
  * });
  * ```
  *
  * @example
- * // With custom tracking attribute
- * ```
+ * With custom tracking attribute
+ *
+ * ```ts
  * const setupWidgets = findOnce('setup', {
  *   onceAttribute: 'data-initialized'
  * });
