@@ -206,14 +206,18 @@ function isArrayLike(value: unknown): value is ArrayLike<unknown> {
  *
  * @example
  * // Mark all buttons
+ * ```
  * const buttons = querySelectorOnce('init', 'button');
+ * ```
  *
  * @example
  * // With custom attribute and context
+ * ```
  * const items = querySelectorOnce('processed', '.item', {
  *   onceAttribute: 'data-my-tracker',
  *   context: document.querySelector('#container')
  * });
+ * ```
  */
 export function querySelectorOnce<T extends Element>(
   onceId: OnceId,
@@ -269,17 +273,23 @@ export function querySelectorOnce<T extends Element>(
  *
  * @example
  * // Remove from all matching elements
+ * ```
  * const removed = removeOnce('init', '.processed');
+ * ```
  *
  * @example
  * // Remove from a NodeList
+ * ```
  * const elements = document.querySelectorAll('.item');
  * removeOnce('processed', elements);
+ * ```
  *
  * @example
  * // Remove from a single element
+ * ```
  * const button = document.querySelector('button');
  * removeOnce('clicked', button);
+ * ```
  */
 export function removeOnce<T extends Element>(
   onceId: OnceId,
@@ -377,22 +387,28 @@ export function removeOnce<T extends Element>(
  *
  * @example
  * // Initialize all buttons once
+ * ```
  * doOnce('init', 'button', (btn) => {
  *   btn.addEventListener('click', handleClick);
  * });
+ * ```
  *
  * @example
  * // Process a NodeList
+ * ```
  * const items = document.querySelectorAll('.item');
  * doOnce('animate', items, (item) => {
  *   item.classList.add('animated');
- * });
+ * })
+ * ```
  *
  * @example
  * // With custom tracking attribute
+ * ```
  * doOnce('setup', '.widget', setupWidget, {
  *   onceAttribute: 'data-initialized'
  * });
+ * ```
  */
 export function doOnce<T extends Element>(
   onceId: OnceId,
@@ -492,19 +508,25 @@ export function doOnce<T extends Element>(
  *
  * @example
  * // Find all initialized buttons
+ * ```
  * const initializedButtons = findOnce('init');
+ * ```
  *
  * @example
  * // Find within a specific container
+ * ```
  * const processedItems = findOnce('processed', {
  *   context: document.querySelector('#container')
  * });
+ * ```
  *
  * @example
  * // With custom tracking attribute
+ * ```
  * const setupWidgets = findOnce('setup', {
  *   onceAttribute: 'data-initialized'
  * });
+ * ```
  */
 export function findOnce<T extends Element>(
   onceId: OnceId,
