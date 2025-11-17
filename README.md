@@ -3,18 +3,34 @@
 [![npm version](https://img.shields.io/npm/v/@briantbailey/dom-once.svg)](https://www.npmjs.com/package/@briantbailey/dom-once)
 [![Bundle Size](https://img.shields.io/bundlephobia/minzip/@briantbailey/dom-once)](https://bundlephobia.com/package/@briantbailey/dom-once)
 [![JSR](https://jsr.io/badges/@briantbailey/dom-once)](https://jsr.io/@briantbailey/dom-once)
+[![TypeScript](https://img.shields.io/badge/TypeScript-source-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Types](https://img.shields.io/npm/types/@briantbailey/dom-once)](https://www.npmjs.com/package/@briantbailey/dom-once)
+[![ESM Only](https://img.shields.io/badge/ESM-only-3178c6?logo=javascript&logoColor=white)](https://nodejs.org/api/esm.html)
+[![Tree Shakeable](https://img.shields.io/badge/tree-shakeable-success?logo=webpack)](https://webpack.js.org/guides/tree-shaking/)
+[![CI](https://github.com/briantbailey/dom-once/workflows/CI/badge.svg)](https://github.com/briantbailey/dom-once/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 Simple utilities to select and manipulate DOM elements only once.
 
-Run your DOM initialization code safely, even when called multiple times. Ideal for SPAs, HTMX, and dynamic content.
+Run your DOM initialization code safely, even when called multiple times. Ideal for SPAs and dynamic DOM updates. Framework-agnostic; safe after re-renders or partial updates.
 
 ```ts
 // Initialize buttons only once, even if called multiple times
 doOnce('btn-init', '.btn', (btn) => btn.classList.add('ready'));
 ```
 
-> Status: API stable, pre-1.0. The public API is finalized and will not change before 1.0.
+>Status: API stable, pre-1.0. The public API is finalized and will not change before 1.0.
+
+## Features
+
+- **Zero dependencies** — Pure DOM utilities, no external libraries
+- **Enforces idempotent initialization** — Prevents re-execution on already-processed elements
+- **Flexible selectors** — Works with CSS strings, Elements, NodeLists, or arrays
+- **Customizable tracking** — Use any data attribute name
+- **Framework-agnostic** — Pure JavaScript, works anywhere the DOM exists
+- **Full TypeScript support** — Complete type definitions included
+- **Tree-shakeable ESM** — Modern bundlers can eliminate unused code
+- **Tiny footprint** — [Check current bundle size](https://bundlephobia.com/package/@briantbailey/dom-once)
 
 ## How It Works
 
@@ -25,6 +41,12 @@ Tracks processed elements using a data attribute (default: `data-dom-once`) with
 ```
 
 Each once id marks that a specific operation has been performed, preventing duplicate initialization even when your code runs multiple times.
+
+**OnceId Rules:**
+- Valid characters: letters, numbers, underscores (`_`), and hyphens (`-`)
+- Examples: `btn-init`, `tooltip_setup`, `v2`
+- Avoid spaces (tokens are space-delimited)
+- Case-sensitive: `myId` and `myid` are different
 
 ## Installation
 
@@ -78,6 +100,8 @@ doOnce('btn-init', '.btn', (btn) => {
   btn.classList.add('initialized');
 });
 ```
+
+Note: This package is ESM-only. Use `import` in Node and bundlers; `require()` is not supported.
 
 ### Browser (ESM via CDN)
 
