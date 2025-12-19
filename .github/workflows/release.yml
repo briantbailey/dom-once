@@ -40,18 +40,15 @@ jobs:
 
       - name: Create versioned IIFE bundle and zip
         run: |
-          VERSION=${GITHUB_REF#refs/tags/}
+          VERSION=${GITHUB_REF_NAME}
           cd dist
           cp dom-once.iife.min.js dom-once-${VERSION}.iife.min.js
           cp dom-once.iife.min.js.map dom-once-${VERSION}.iife.min.js.map
           zip -j dom-once-${VERSION}.iife.min.zip dom-once-${VERSION}.iife.min.js dom-once-${VERSION}.iife.min.js.map
 
       - name: Upload IIFE assets to release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            dist/dom-once-*.iife.min.zip
-            dist/dom-once-*.iife.min.js
-            dist/dom-once-*.iife.min.js.map
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ github.ref_name }}
+        run: |
+          gh release upload "$VERSION" dist/dom-once-${VERSION}.iife.min.zip dist/dom-once-${VERSION}.iife.min.js dist/dom-once-${VERSION}.iife.min.js.map --clobber
