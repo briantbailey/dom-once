@@ -1,3 +1,12 @@
+## [1.0.0](https://github.com/briantbailey/dom-once/compare/v0.4.4...v1.0.0) (2025-12-26)
+
+### ⚠ BREAKING CHANGES
+
+* The API is now stable and adheres to Semantic Versioning.
+
+### Features
+
+* release initial stable 1.0 ([be6ce57](https://github.com/briantbailey/dom-once/commit/be6ce5761b58ed9b830f1dfee7fb55e2ce028747))
 ## [0.4.4](https://github.com/briantbailey/dom-once/compare/v0.4.3...v0.4.4) (2025-12-19)
 ## [0.4.3](https://github.com/briantbailey/dom-once/compare/v0.4.2...v0.4.3) (2025-12-19)
 ## [0.4.2](https://github.com/briantbailey/dom-once/compare/v0.4.1...v0.4.2) (2025-11-17)
