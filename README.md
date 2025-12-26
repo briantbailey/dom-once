@@ -19,8 +19,6 @@ Run your DOM initialization code safely, even when called multiple times. Ideal 
 doOnce('btn-init', '.btn', (btn) => btn.classList.add('ready'));
 ```
 
->Status: API stable, pre-1.0. The public API is finalized and will not change before 1.0.
-
 ## Features
 
 - **Zero dependencies** — Pure DOM utilities, no external libraries
@@ -150,7 +148,7 @@ Queries for elements using a CSS selector and marks them with a once id.
 - `options`: `object` (optional)
   - `onceAttribute`: `string` — Data attribute name (default: `'data-dom-once'`)
   - `context`: `Document | DocumentFragment | Element` — Query context (default: `document`)
-- **Returns**: `Element[]` — Elements newly marked with the once id
+- **Returns**: `Element[]` — Elements that matched the selector AND didn't already have the once id (i.e., newly marked). Elements already marked are excluded.
 
 ---
 
@@ -164,7 +162,7 @@ Executes a callback once per element, marking elements to prevent re-execution.
 - `options`: `object` (optional)
   - `onceAttribute`: `string` — Data attribute name (default: `'data-dom-once'`)
   - `context`: `Document | DocumentFragment | Element` — Query context (default: `document`)
-- **Returns**: `Element[]` — Elements that were processed
+- **Returns**: `Element[]` — Elements that were newly processed (matched the selector and didn't already have the once id). Elements already marked are excluded.
 
 ---
 
@@ -177,7 +175,7 @@ Removes a once id from elements.
 - `options`: `object` (optional)
   - `onceAttribute`: `string` — Data attribute name (default: `'data-dom-once'`)
   - `context`: `Document | DocumentFragment | Element` — Query context (default: `document`)
-- **Returns**: `Element[]` — Elements that had the once id removed
+- **Returns**: `Element[]` — Only elements that actually had the once id removed (matched the selector AND had the once id). Unmarked elements are excluded.
 
 ---
 
